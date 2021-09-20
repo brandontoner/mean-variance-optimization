@@ -15,15 +15,15 @@ import java.util.stream.Collector;
  * For every pair (a, b) in the collection, where a != b, a.mean() < b.mean() <=> a.variance() < b.variance()
  * </p>
  */
-public class MeanVarianceSet implements Collection<Portfolio> {
+public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
     /** Backing list. */
-    private final List<Portfolio> portfolios = new ArrayList<>();
+    private final List<T> portfolios = new ArrayList<>();
 
     public MeanVarianceSet() {
         // noop
     }
 
-    public MeanVarianceSet(Collection<Portfolio> expected) {
+    public MeanVarianceSet(Collection<T> expected) {
         addAll(expected);
     }
 
@@ -43,7 +43,7 @@ public class MeanVarianceSet implements Collection<Portfolio> {
     }
 
     @Override
-    public Iterator<Portfolio> iterator() {
+    public Iterator<T> iterator() {
         return portfolios.iterator();
     }
 
@@ -58,10 +58,10 @@ public class MeanVarianceSet implements Collection<Portfolio> {
     }
 
     @Override
-    public boolean add(Portfolio portfolio) {
-        int index = Collections.binarySearch(portfolios, portfolio, Comparator.comparingDouble(Portfolio::mean));
+    public boolean add(T portfolio) {
+        int index = Collections.binarySearch(portfolios, portfolio, Comparator.comparingDouble(T::mean));
         if (index >= 0) {
-            Portfolio other = portfolios.get(index);
+            T other = portfolios.get(index);
             if (portfolio.variance() < other.variance()) {
                 portfolios.set(index, portfolio);
                 return true;
@@ -71,11 +71,11 @@ public class MeanVarianceSet implements Collection<Portfolio> {
         }
         index = -(index + 1);
         if (index > 0) {
-            Portfolio other = portfolios.get(index - 1);
+            T other = portfolios.get(index - 1);
             if (portfolio.variance() <= other.variance()) {
                 portfolios.set(index - 1, portfolio);
                 while (index - 2 >= 0) {
-                    Portfolio p = portfolios.get(index - 2);
+                    T p = portfolios.get(index - 2);
                     if (portfolio.variance() <= p.variance()) {
                         portfolios.remove(index - 2);
                         index--;
@@ -87,7 +87,7 @@ public class MeanVarianceSet implements Collection<Portfolio> {
             }
         }
         if (index < portfolios.size()) {
-            Portfolio other = portfolios.get(index);
+            T other = portfolios.get(index);
             if (portfolio.variance() >= other.variance()) {
                 return false;
             }
@@ -107,9 +107,9 @@ public class MeanVarianceSet implements Collection<Portfolio> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends Portfolio> c) {
+    public boolean addAll(Collection<? extends T> c) {
         boolean changed = false;
-        for (Portfolio portfolio : c) {
+        for (T portfolio : c) {
             if (add(portfolio)) {
                 changed = true;
             }
@@ -141,7 +141,7 @@ public class MeanVarianceSet implements Collection<Portfolio> {
             return false;
         }
 
-        MeanVarianceSet that = (MeanVarianceSet) o;
+        MeanVarianceSet<?> that = (MeanVarianceSet<?>) o;
 
         return portfolios.equals(that.portfolios);
     }
@@ -152,7 +152,7 @@ public class MeanVarianceSet implements Collection<Portfolio> {
     }
 
     @Override
-    public Spliterator<Portfolio> spliterator() {
+    public Spliterator<T> spliterator() {
         return portfolios.spliterator();
     }
 
@@ -161,7 +161,7 @@ public class MeanVarianceSet implements Collection<Portfolio> {
      *
      * @return collector which collects into a MeanVarianceSet
      */
-    public static Collector<Portfolio, ?, MeanVarianceSet> collector() {
-        return MeanVarianceSetCollector.INSTANCE;
+    public static <T extends Portfolio> Collector<T, ?, MeanVarianceSet<T>> collector() {
+        return new MeanVarianceSetCollector<>();
     }
 }
