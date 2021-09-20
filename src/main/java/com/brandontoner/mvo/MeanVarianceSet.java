@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
+import java.util.stream.Collector;
 
 /**
  * A Collection of portfolios which satisfy the mean variance optimization constraints.
@@ -153,5 +154,14 @@ public class MeanVarianceSet implements Collection<Portfolio> {
     @Override
     public Spliterator<Portfolio> spliterator() {
         return portfolios.spliterator();
+    }
+
+    /**
+     * Gets a Collector for use with {@link java.util.stream.Stream#collect(Collector)}.
+     *
+     * @return collector which collects into a MeanVarianceSet
+     */
+    public static Collector<Portfolio, ?, MeanVarianceSet> collector() {
+        return MeanVarianceSetCollector.INSTANCE;
     }
 }
