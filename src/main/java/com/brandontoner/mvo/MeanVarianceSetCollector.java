@@ -7,22 +7,22 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-class MeanVarianceSetCollector<T extends Portfolio> implements Collector<T, MeanVarianceSet<T>, MeanVarianceSet<T>> {
+class MeanVarianceSetCollector implements Collector<Portfolio, MeanVarianceSet, MeanVarianceSet> {
     private static final Set<Characteristics> CHARACTERISTICS =
             Set.of(Characteristics.IDENTITY_FINISH, Characteristics.UNORDERED);
 
     @Override
-    public Supplier<MeanVarianceSet<T>> supplier() {
+    public Supplier<MeanVarianceSet> supplier() {
         return MeanVarianceSet::new;
     }
 
     @Override
-    public BiConsumer<MeanVarianceSet<T>, T> accumulator() {
+    public BiConsumer<MeanVarianceSet, Portfolio> accumulator() {
         return MeanVarianceSet::add;
     }
 
     @Override
-    public BinaryOperator<MeanVarianceSet<T>> combiner() {
+    public BinaryOperator<MeanVarianceSet> combiner() {
         return (a, b) -> {
             if (a.isEmpty()) {
                 return b;
@@ -41,7 +41,7 @@ class MeanVarianceSetCollector<T extends Portfolio> implements Collector<T, Mean
     }
 
     @Override
-    public Function<MeanVarianceSet<T>, MeanVarianceSet<T>> finisher() {
+    public Function<MeanVarianceSet, MeanVarianceSet> finisher() {
         return Function.identity();
     }
 

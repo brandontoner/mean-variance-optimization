@@ -15,15 +15,15 @@ import java.util.stream.Collector;
  * For every pair (a, b) in the collection, where a != b, a.mean() < b.mean() <=> a.variance() < b.variance()
  * </p>
  */
-public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
+public class MeanVarianceSet implements Collection<Portfolio> {
     /** Backing list. */
-    private final List<T> portfolios = new ArrayList<>();
+    private final List<Portfolio> portfolios = new ArrayList<>();
 
     public MeanVarianceSet() {
         // noop
     }
 
-    public MeanVarianceSet(Collection<T> expected) {
+    public MeanVarianceSet(Collection<Portfolio> expected) {
         addAll(expected);
     }
 
@@ -43,7 +43,7 @@ public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public Iterator<Portfolio> iterator() {
         return portfolios.iterator();
     }
 
@@ -57,11 +57,23 @@ public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
         return portfolios.toArray(a);
     }
 
+    /**
+     * Returns the element at the specified position in this list.
+     *
+     * @param index index of the element to return
+     * @return the element at the specified position in this list
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         ({@code index < 0 || index >= size()})
+     */
+    public Portfolio get(int index) {
+        return portfolios.get(index);
+    }
+
     @Override
-    public boolean add(T portfolio) {
-        int index = Collections.binarySearch(portfolios, portfolio, Comparator.comparingDouble(T::mean));
+    public boolean add(Portfolio portfolio) {
+        int index = Collections.binarySearch(portfolios, portfolio, Comparator.comparingDouble(Portfolio::mean));
         if (index >= 0) {
-            T other = portfolios.get(index);
+            Portfolio other = portfolios.get(index);
             if (portfolio.variance() < other.variance()) {
                 portfolios.set(index, portfolio);
                 return true;
@@ -71,11 +83,11 @@ public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
         }
         index = -(index + 1);
         if (index > 0) {
-            T other = portfolios.get(index - 1);
+            Portfolio other = portfolios.get(index - 1);
             if (portfolio.variance() <= other.variance()) {
                 portfolios.set(index - 1, portfolio);
                 while (index - 2 >= 0) {
-                    T p = portfolios.get(index - 2);
+                    Portfolio p = portfolios.get(index - 2);
                     if (portfolio.variance() <= p.variance()) {
                         portfolios.remove(index - 2);
                         index--;
@@ -87,7 +99,7 @@ public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
             }
         }
         if (index < portfolios.size()) {
-            T other = portfolios.get(index);
+            Portfolio other = portfolios.get(index);
             if (portfolio.variance() >= other.variance()) {
                 return false;
             }
@@ -107,9 +119,9 @@ public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> c) {
+    public boolean addAll(Collection<? extends Portfolio> c) {
         boolean changed = false;
-        for (T portfolio : c) {
+        for (Portfolio portfolio : c) {
             if (add(portfolio)) {
                 changed = true;
             }
@@ -141,7 +153,7 @@ public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
             return false;
         }
 
-        MeanVarianceSet<?> that = (MeanVarianceSet<?>) o;
+        MeanVarianceSet that = (MeanVarianceSet) o;
 
         return portfolios.equals(that.portfolios);
     }
@@ -152,7 +164,7 @@ public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
     }
 
     @Override
-    public Spliterator<T> spliterator() {
+    public Spliterator<Portfolio> spliterator() {
         return portfolios.spliterator();
     }
 
@@ -161,7 +173,7 @@ public class MeanVarianceSet<T extends Portfolio> implements Collection<T> {
      *
      * @return collector which collects into a MeanVarianceSet
      */
-    public static <T extends Portfolio> Collector<T, ?, MeanVarianceSet<T>> collector() {
-        return new MeanVarianceSetCollector<>();
+    public static Collector<Portfolio, ?, MeanVarianceSet> collector() {
+        return new MeanVarianceSetCollector();
     }
 }
