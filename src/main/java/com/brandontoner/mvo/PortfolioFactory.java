@@ -1,6 +1,11 @@
 package com.brandontoner.mvo;
 
+import java.util.Arrays;
+
 public final class PortfolioFactory {
+    private static final ThreadLocal<double[]> RETURNS_THREAD_LOCAL = new ThreadLocal<>();
+    private static final ThreadLocal<double[]> CLOSING_PRICES_THREAD_LOCAL = new ThreadLocal<>();
+
     private PortfolioFactory() {
     }
 
@@ -19,26 +24,39 @@ public final class PortfolioFactory {
         return new Portfolio(tickers, counts, mean, variance);
     }
 
-    private static double[] getReturns(double[] closingValues) {
-        double[] returns = new double[closingValues.length - 1];
+    static double[] getReturns(double[] closingValues) {
+        double[] returns = RETURNS_THREAD_LOCAL.get();
+        if (returns == null || returns.length != closingValues.length - 1) {
+            returns = new double[closingValues.length - 1];
+            RETURNS_THREAD_LOCAL.set(returns);
+        }
+        double last = closingValues[0];
         for (int i = 1; i < closingValues.length; ++i) {
-            returns[i - 1] = closingValues[i] / closingValues[i - 1];
+            double v = closingValues[i];
+            returns[i - 1] = v / last;
+            last = v;
         }
         return returns;
     }
 
-
     private static double[] getClosingPrices(Ticker[] tickers, int[] counts) {
-        double[] output = new double[tickers[0].getClosingPricesArray().length];
+        double[] output = CLOSING_PRICES_THREAD_LOCAL.get();
+        int length = tickers[0].getClosingPricesArray().length;
+        if (output == null || output.length != length) {
+            output = new double[length];
+            CLOSING_PRICES_THREAD_LOCAL.set(output);
+        }
+        Arrays.fill(output, 0);
         for (int i = 0; i < tickers.length; i++) {
             int coef = counts[i];
             if (coef == 0) {
                 continue;
             }
             Ticker ticker = tickers[i];
-            double[] closingPricesArray = ticker.getClosingPricesArray();
+            double[] closingPricesArray = ticker.getClosingPricesArray(coef);
+
             for (int j = 0; j < closingPricesArray.length; j++) {
-                output[j] += closingPricesArray[j] * coef;
+                output[j] += closingPricesArray[j];
             }
         }
         return output;

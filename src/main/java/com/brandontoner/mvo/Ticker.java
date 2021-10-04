@@ -13,6 +13,8 @@ public class Ticker {
     private final SortedMap<LocalDate, Double> closingPrices;
     /** Closing price per day. */
     private final double[] closingPricesArray;
+    /** Array of closing prices multiplied by the index. */
+    private final double[][] closingPricesArrayCache;
 
     /**
      * Constructor.
@@ -24,6 +26,13 @@ public class Ticker {
         this.name = name;
         this.closingPrices = Collections.unmodifiableSortedMap(new TreeMap<>(closingPrices));
         this.closingPricesArray = this.closingPrices.values().stream().mapToDouble(Double::doubleValue).toArray();
+        closingPricesArrayCache = new double[1000][];
+        for (int i = 0; i < closingPricesArrayCache.length; ++i) {
+            closingPricesArrayCache[i] = new double[closingPricesArray.length];
+            for (int j = 0; j < closingPricesArray.length; j++) {
+                closingPricesArrayCache[i][j] = closingPricesArray[j] * i;
+            }
+        }
     }
 
     /**
@@ -51,5 +60,14 @@ public class Ticker {
      */
     public double[] getClosingPricesArray() {
         return closingPricesArray;
+    }
+
+    /**
+     * Gets the closing prices multiplied by a coefficient.
+     *
+     * @param coef value to multiply the closing prices by
+     */
+    public double[] getClosingPricesArray(int coef) {
+        return closingPricesArrayCache[coef];
     }
 }
