@@ -26,7 +26,7 @@ public class Ticker {
         this.name = name;
         this.closingPrices = Collections.unmodifiableSortedMap(new TreeMap<>(closingPrices));
         this.closingPricesArray = this.closingPrices.values().stream().mapToDouble(Double::doubleValue).toArray();
-        closingPricesArrayCache = new double[1000][];
+        closingPricesArrayCache = new double[1001][];
         for (int i = 0; i < closingPricesArrayCache.length; ++i) {
             closingPricesArrayCache[i] = new double[closingPricesArray.length];
             for (int j = 0; j < closingPricesArray.length; j++) {

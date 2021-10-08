@@ -12,10 +12,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -23,14 +26,16 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-public class S3TickerProvider implements Supplier<List<Ticker>> {
+@Singleton
+public class S3TickerProvider implements Provider<List<Ticker>> {
     private static final Logger LOGGER = Logger.getLogger(S3TickerProvider.class.getName());
     private static final LocalDate HORIZON = LocalDate.now().minusYears(1);
     private static final Pattern PATTERN = Pattern.compile("([A-Z]+)\\.csv");
     private final String bucketName;
     private final S3Client s3Client;
 
-    S3TickerProvider(String bucketName, S3Client s3Client) {
+    @Inject
+    S3TickerProvider(@Named("tickerBucket") String bucketName, S3Client s3Client) {
         this.bucketName = bucketName;
         this.s3Client = s3Client;
     }
