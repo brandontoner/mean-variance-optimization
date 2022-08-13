@@ -28,20 +28,22 @@ tasks.withType(JavaExec) {
 }
 
 dependencies {
-    // AWS
-    implementation platform('software.amazon.awssdk:bom:2.17.46')
-    implementation 'software.amazon.awssdk:s3'
     // Ion
     implementation 'software.amazon.ion:ion-java:1.5.1'
     // DI
     implementation 'javax.inject:javax.inject:1'
+    implementation 'com.google.inject:guice:5.1.0'
+    implementation 'com.google.guava:guava:31.1-jre'
+    // Logging
+    implementation 'org.apache.logging.log4j:log4j-api:2.18.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.18.0'
     // Testing
-    testImplementation(platform('org.junit:junit-bom:5.8.1'))
+    testImplementation(platform('org.junit:junit-bom:5.9.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
-    testImplementation('org.mockito:mockito-core:3.5.10')
+    testImplementation('org.mockito:mockito-core:4.6.1')
     // JMH
-    jmhImplementation 'org.openjdk.jmh:jmh-core:1.33'
-    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.33'
+    jmhImplementation 'org.openjdk.jmh:jmh-core:1.35'
+    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.35'
 }
 
 test {
@@ -58,15 +60,15 @@ jacocoTestReport {
 }
 
 jacoco {
-    toolVersion "0.8.6"
+    toolVersion "0.8.8"
 }
 
 checkstyle {
-    toolVersion '9.0'
+    toolVersion '10.3.2'
 }
 
 task jmh(type: JavaExec, dependsOn: jmhClasses) {
-    mainClass = 'org.openjdk.jmh.Main'
+    mainClass.set('org.openjdk.jmh.Main')
     classpath = sourceSets.jmh.compileClasspath + sourceSets.jmh.runtimeClasspath
 }
 

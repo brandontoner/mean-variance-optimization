@@ -11,11 +11,11 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.ion.IonInt;
 import software.amazon.ion.IonReader;
 import software.amazon.ion.IonStruct;
@@ -26,7 +26,7 @@ import software.amazon.ion.IonWriter;
 
 @Singleton
 public class IonSerializer {
-    private static final Logger LOGGER = Logger.getLogger(IonSerializer.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IonSystem ionSystem;
     private final Path outputDir;
     private final Path path;
@@ -78,11 +78,11 @@ public class IonSerializer {
         }
         Files.move(temp, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         long endTimeNs = System.nanoTime();
-        LOGGER.info(String.format("Wrote %s entries (%s bytes) to %s in %s seconds",
-                                  written,
-                                  Files.size(path),
-                                  path,
-                                  (endTimeNs - startTimeNs) * 1.0 / TimeUnit.SECONDS.toNanos(1)));
+        LOGGER.info("Wrote {} entries ({} bytes) to {} in {} seconds",
+                    written,
+                    Files.size(path),
+                    path,
+                    (endTimeNs - startTimeNs) * 1.0 / TimeUnit.SECONDS.toNanos(1));
     }
 
     /**
@@ -121,16 +121,16 @@ public class IonSerializer {
             }
             Files.copy(path, outputDir.resolve("cache." + path.toFile().lastModified() + ".ion"));
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to load cache file", e);
+            LOGGER.error("Failed to load cache file", e);
             return output;
         }
         long endTimeNs = System.nanoTime();
-        LOGGER.info(String.format("Read %s entries, %s valid (%s bytes) from %s in %s seconds",
-                                  read,
-                                  output.size(),
-                                  path.toFile().length(),
-                                  path,
-                                  (endTimeNs - startTimeNs) * 1.0 / TimeUnit.SECONDS.toNanos(1)));
+        LOGGER.info("Read {} entries, {} valid ({} bytes) from {} in {} seconds",
+                    read,
+                    output.size(),
+                    path.toFile().length(),
+                    path,
+                    (endTimeNs - startTimeNs) * 1.0 / TimeUnit.SECONDS.toNanos(1));
         return output;
     }
 }

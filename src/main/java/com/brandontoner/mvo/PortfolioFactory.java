@@ -24,6 +24,22 @@ public final class PortfolioFactory {
         return new Portfolio(tickers, counts, mean, variance);
     }
 
+    /**
+     * Gets a Portfolio for the provided ticker and count arrays.
+     *
+     * @param tickers         ticker array
+     * @param counts          count array
+     * @param meanAndVariance array where mean and variance are stored in index 0 and 1
+     */
+    public static void getMeanAndVariance(Ticker[] tickers, int[] counts, double[] meanAndVariance) {
+        double[] closingValues = getClosingPrices(tickers, counts);
+        double[] returns = getReturns(closingValues);
+        double mean = Statistics.mean(returns);
+        double variance = Statistics.variance(returns, mean);
+        meanAndVariance[0] = mean;
+        meanAndVariance[1] = variance;
+    }
+
     static double[] getReturns(double[] closingValues) {
         double[] returns = RETURNS_THREAD_LOCAL.get();
         if (returns == null || returns.length != closingValues.length - 1) {

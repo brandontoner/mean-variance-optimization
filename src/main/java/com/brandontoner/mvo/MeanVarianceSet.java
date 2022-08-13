@@ -7,7 +7,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collector;
+import javax.annotation.Nonnull;
 
 /**
  * A Collection of portfolios which satisfy the mean variance optimization constraints.
@@ -53,7 +55,7 @@ public class MeanVarianceSet implements Collection<Portfolio> {
     }
 
     @Override
-    public <T> T[] toArray(T[] a) {
+    public <T> T[] toArray(@Nonnull T[] a) {
         return portfolios.toArray(a);
     }
 
@@ -62,8 +64,7 @@ public class MeanVarianceSet implements Collection<Portfolio> {
      *
      * @param index index of the element to return
      * @return the element at the specified position in this list
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         ({@code index < 0 || index >= size()})
+     * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
     public Portfolio get(int index) {
         return portfolios.get(index);
@@ -108,13 +109,93 @@ public class MeanVarianceSet implements Collection<Portfolio> {
         return true;
     }
 
+    /**
+     * Adds a portfolio to the set. Avoids allocating the {@link Portfolio} if not being inserted.
+     *
+     * @param tickers  portfolio tickers
+     * @param counts   portfolio counts, will be cloned
+     * @param mean     portfolio mean
+     * @param variance portfolio variance
+     * @return true if added, else false
+     */
+    public boolean add(Ticker[] tickers, int[] counts, double mean, double variance) {
+        int index = binarySearch(portfolios, mean, Portfolio::mean);
+        if (index >= 0) {
+            Portfolio other = portfolios.get(index);
+            if (variance < other.variance()) {
+                portfolios.set(index, new Portfolio(tickers, counts.clone(), mean, variance));
+                return true;
+            } else {
+                return false;
+            }
+        }
+        index = -(index + 1);
+        if (index > 0) {
+            Portfolio other = portfolios.get(index - 1);
+            if (variance <= other.variance()) {
+                portfolios.set(index - 1, new Portfolio(tickers, counts.clone(), mean, variance));
+                while (index - 2 >= 0) {
+                    Portfolio p = portfolios.get(index - 2);
+                    if (variance <= p.variance()) {
+                        portfolios.remove(index - 2);
+                        index--;
+                    } else {
+                        break;
+                    }
+                }
+                return true;
+            }
+        }
+        if (index < portfolios.size()) {
+            Portfolio other = portfolios.get(index);
+            if (variance >= other.variance()) {
+                return false;
+            }
+        }
+        portfolios.add(index, new Portfolio(tickers, counts.clone(), mean, variance));
+        return true;
+    }
+
+    /**
+     * Performs a Binary search on a list trying to find {@code v} using {@code f}. List must be ordered by {@code f}.
+     *
+     * @param list list to search
+     * @param v    target value
+     * @param f    function
+     * @param <T>  list type
+     * @return the index of the search key, if it is contained in the list; otherwise,
+     *         {@code (-(<i>insertion point</i>) - 1)}. The <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the list: the index of the first element greater than the key, or
+     *         {@code list.size()} if all elements in the list are less than the specified key. Note that this
+     *         guarantees that the return value will be &gt;= 0 if and only if the key is found.
+     */
+    private static <T> int binarySearch(List<T> list, double v, ToDoubleFunction<T> f) {
+        int low = 0;
+        int high = list.size() - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            double midVal = f.applyAsDouble(list.get(mid));
+            int cmp = Double.compare(midVal, v);
+
+            if (cmp < 0) {
+                low = mid + 1;
+            } else if (cmp > 0) {
+                high = mid - 1;
+            } else {
+                return mid; // key found
+            }
+        }
+        return -(low + 1);  // key not found
+    }
+
     @Override
     public boolean remove(Object o) {
         return portfolios.remove(o);
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public boolean containsAll(@Nonnull Collection<?> c) {
         return portfolios.containsAll(c);
     }
 
@@ -130,12 +211,12 @@ public class MeanVarianceSet implements Collection<Portfolio> {
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(@Nonnull Collection<?> c) {
         return portfolios.removeAll(c);
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(@Nonnull Collection<?> c) {
         return portfolios.retainAll(c);
     }
 
